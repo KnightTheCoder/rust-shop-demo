@@ -30,8 +30,8 @@ impl User {
     }
 
     pub fn register(&self, db: &Database) -> Result<bool> {
-        let affected_rows = db.create_user(&self.username, &self.password)?;
-        if affected_rows > 0 {
+        let success = db.create_user(&self.username, &self.password)?;
+        if success {
             Ok(true)
         } else {
             Ok(false)
