@@ -1,12 +1,12 @@
+mod user;
 mod database;
 mod utilities;
-mod user;
+mod user_interface;
 
 use database::Database;
-use utilities::{input, clear_screen};
 use user::User;
-
-use rusqlite::Result;
+use utilities::{input, clear_screen};
+use user_interface::{register, login};
 use std::process;
 
 fn main() {
@@ -57,40 +57,4 @@ fn main() {
         input("Press any key to continue").expect("Failed to get input");
     }
     
-}
-
-fn register(db: &Database) -> Result<User> {
-    println!("Register user");
-    let username = input("Username: ").unwrap();
-    let password = input("Passowrd: ").unwrap();
-    let user = User::new(-1, &username, &password);
-    
-    match user.register(&db) {
-        Ok(res) => {
-            if res {
-                println!("Successfully registered new account");
-            } else {
-                println!("Unsuccessfully registered new account");
-            }
-            Ok(user)
-        }
-        Err(err) => Err(err)
-    }
-}
-
-fn login(db: &Database, user: &User) {
-    println!("Login user");
-    let username = input("Username: ").unwrap();
-    let password = input("Password: ").unwrap();
-    match user.login(&db, &username, &password) {
-        Ok(res) => {
-            if res  {
-                println!("Successfull login!");
-            } else {
-                println!("Failed to login!");
-                println!("Username or Password is incorrect!")
-            }
-        }
-        Err(err) => eprintln!("{}", err.to_string())
-    }
 }
