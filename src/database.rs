@@ -1,5 +1,8 @@
 use rusqlite::{Connection, Result};
-use crate::user::User;
+use crate::{
+    user::User,
+    utilities::hash_password
+};
 
 #[derive(Debug)]
 pub struct Database {
@@ -39,6 +42,7 @@ impl Database {
         if username.trim().len() == 0 && password.trim().len() == 0 {
             return Ok(false)
         }
+        let password = &hash_password(password);
 
         let result = self.conn.execute(
         "INSERT INTO users (username, password) VALUES (?, ?)
@@ -106,7 +110,9 @@ impl Database {
 
 #[cfg(test)]
 mod tests {
-    use crate::database::Database;
+    use crate::utilities::hash_password;
+
+    use super::Database;
     use rusqlite::Result;
 
     fn setup() -> Result<Database> {
@@ -128,6 +134,7 @@ mod tests {
     fn create_user_success() {
         let db = setup().unwrap();
         let success = db.create_user("User", "123").expect("Error creating user");
+        
         assert_eq!(success, true)
     }
 
@@ -135,6 +142,7 @@ mod tests {
     fn create_user_failure() {
         let db = setup().unwrap();
         let success = db.create_user("", "").expect("Error creating user");
+        
         assert_eq!(success, false)
     }
 
@@ -142,9 +150,11 @@ mod tests {
     fn get_created_user_success() {
         let username = "new_user";
         let password = "password";
+
         let db = setup().unwrap();
         db.create_user(username, password).unwrap();
-        let user = db.get_user(username, password).unwrap();
+
+        let user = db.get_user(username, &hash_password(password)).unwrap();
         assert_ne!(user.id, -1)
     }
 
@@ -152,8 +162,10 @@ mod tests {
     fn get_created_user_with_empty_credentials() {
         let username = "";
         let password = "";
+
         let db = setup().unwrap();
         db.create_user(username, password).unwrap();
+        
         let user = db.get_user(username, password).unwrap();
         assert_eq!(user.id, -1)
     }

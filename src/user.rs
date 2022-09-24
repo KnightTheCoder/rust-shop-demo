@@ -31,21 +31,12 @@ impl User {
 
     pub fn register(&self, db: &Database) -> Result<bool> {
         let success = db.create_user(&self.username, &self.password)?;
-        if success {
-            Ok(true)
-        } else {
-            Ok(false)
-        }
+        Ok(success)
     }
 
     pub fn login(&self, db: &Database, username: &str, password: &str) -> Result<bool> {
-        let password = &hash_password(password);
-        let user = db.get_user(username, password)?;
-        if user.id != -1 {
-            Ok(true)
-        } else {
-            Ok(false)
-        }
+        let user = db.get_user(username, &hash_password(password))?;
+        Ok(user.id != -1)
     }
 }
 
@@ -56,5 +47,70 @@ impl Default for User {
             username: String::new(),
             password: String::new()
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::User;
+    use crate::{
+        database::Database,
+        utilities::hash_password
+    };
+
+    #[test]
+    fn user_password_encryption() {
+        let hash = hash_password("password");
+        let mut user = User::default();
+        user.set_password("password");
+        
+        assert_eq!(user.password(), hash)
+    }
+
+    #[test]
+    fn register_success() {
+        let db = Database::open_in_memory().unwrap();
+        db.create_users_table().unwrap();
+
+        let user = User::new(-1, "user", "password");
+        let success = user.register(&db).unwrap();
+
+        assert_eq!(success, true)
+    }
+
+    #[test]
+    fn register_failure() {
+        let db = Database::open_in_memory().unwrap();
+        db.create_users_table().unwrap();
+
+        let user = User::default();
+        let success = user.register(&db).unwrap();
+
+        assert_eq!(success, false)
+    }
+
+    #[test]
+    fn login_success() {
+        let db = Database::open_in_memory().unwrap();
+        db.create_users_table().unwrap();
+
+        let user = User::new(-1, "user", "password");
+        let success = user.register(&db).unwrap();
+        assert_eq!(success, true);
+
+        let success = user.login(&db, "user", "password").unwrap();
+        assert_eq!(success, true)
+    }
+
+    #[test]
+    fn login_failure() {
+        let db = Database::open_in_memory().unwrap();
+        db.create_users_table().unwrap();
+
+        let user = User::default();
+        user.register(&db).unwrap();
+
+        let success = user.login(&db, "", "").unwrap();
+        assert_eq!(success, false)
     }
 }
