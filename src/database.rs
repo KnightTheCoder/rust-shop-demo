@@ -42,7 +42,6 @@ impl Database {
         if username.trim().len() == 0 && password.trim().len() == 0 {
             return Ok(false)
         }
-        let password = &hash_password(password);
 
         let result = self.conn.execute(
         "INSERT INTO users (username, password) VALUES (?, ?)
@@ -154,7 +153,7 @@ mod tests {
         let db = setup().unwrap();
         db.create_user(username, password).unwrap();
 
-        let user = db.get_user(username, &hash_password(password)).unwrap();
+        let user = db.get_user(username, password).unwrap();
         assert_ne!(user.id, -1)
     }
 
@@ -165,7 +164,7 @@ mod tests {
 
         let db = setup().unwrap();
         db.create_user(username, password).unwrap();
-        
+
         let user = db.get_user(username, password).unwrap();
         assert_eq!(user.id, -1)
     }

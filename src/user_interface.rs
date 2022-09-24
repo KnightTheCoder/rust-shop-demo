@@ -1,6 +1,6 @@
 use crate::database::Database;
 use crate::user::User;
-use crate::utilities::{input, hash_password};
+use crate::utilities::input;
 
 use rusqlite::Result;
 
