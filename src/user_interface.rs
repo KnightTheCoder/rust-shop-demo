@@ -4,6 +4,7 @@ use crate::utilities::input;
 
 use rusqlite::Result;
 
+/// UI implementation for registering a new user
 pub fn register(db: &Database) -> Result<User> {
     println!("Register user");
     let username = input("Username: ").unwrap();
@@ -23,6 +24,7 @@ pub fn register(db: &Database) -> Result<User> {
     }
 }
 
+/// UI implementation for logging in a user
 pub fn login(db: &Database, user: &User) {
     println!("Login user");
     let username = input("Username: ").unwrap();
