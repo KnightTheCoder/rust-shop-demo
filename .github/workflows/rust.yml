@@ -3,7 +3,6 @@ on: [push, pull_request]
 
 env:
   CARGO_TERM_COLOR: always
-      
 
 jobs:
   build:
@@ -11,8 +10,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        rust: [stable]
+        os: [ubuntu-latest, macos-latest]
+        rust: [stable, nightly, beta]
 
     steps:
     - uses: actions/checkout@v3
