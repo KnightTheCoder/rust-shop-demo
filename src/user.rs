@@ -80,7 +80,7 @@ mod tests {
     #[test]
     fn register_success() {
         let db = Database::open_in_memory().unwrap();
-        db.create_users_table().unwrap();
+        db.create_tables().unwrap();
 
         let user = User::new(-1, "user", "password");
         let success = user.register(&db).unwrap();
@@ -91,7 +91,7 @@ mod tests {
     #[test]
     fn register_failure() {
         let db = Database::open_in_memory().unwrap();
-        db.create_users_table().unwrap();
+        db.create_tables().unwrap();
 
         let user = User::default();
         let success = user.register(&db).unwrap();
@@ -102,7 +102,7 @@ mod tests {
     #[test]
     fn login_success() {
         let db = Database::open_in_memory().unwrap();
-        db.create_users_table().unwrap();
+        db.create_tables().unwrap();
 
         let user = User::new(-1, "user", "password");
         let success = user.register(&db).unwrap();
@@ -115,7 +115,7 @@ mod tests {
     #[test]
     fn login_failure() {
         let db = Database::open_in_memory().unwrap();
-        db.create_users_table().unwrap();
+        db.create_tables().unwrap();
 
         let user = User::default();
         user.register(&db).unwrap();

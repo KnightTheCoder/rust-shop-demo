@@ -11,7 +11,7 @@ use std::process;
 
 fn main() {
     let db = Database::new("users.db").expect("Error creating database");
-    db.create_users_table().expect("Error creating users table");
+    db.create_tables().expect("Error creating users table");
     let mut user = User::default();
     
     loop {

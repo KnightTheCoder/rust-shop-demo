@@ -1,12 +1,16 @@
 use rusqlite::{Connection, Result};
 use crate::user::User;
 
+/// [`Database`] is a collection of methods 
+/// made to work with an SQlite [`Connection`]
 #[derive(Debug)]
 pub struct Database {
     conn: Connection
 }
 
 impl Database {
+    /// Creates a new [`Database`] with an SQlite connection 
+    /// to the given file
     pub fn new(fname: &str) -> Result<Self> {
         Ok(
             Self {
@@ -15,6 +19,8 @@ impl Database {
         )
     }
 
+    /// Creates a new [`Database`] with an SQlite [`Connection`] 
+    /// in memory
     pub fn open_in_memory() -> Result<Self> {
         Ok(
             Self {
@@ -23,7 +29,8 @@ impl Database {
         )
     }
 
-    pub fn create_users_table(&self) -> Result<()> {
+    /// Creates tables if they don't already exist
+    pub fn create_tables(&self) -> Result<()> {
         self.conn.execute(
             "CREATE TABLE IF NOT EXISTS users(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,6 +42,8 @@ impl Database {
         Ok(())
     }
 
+    /// Creates a new user and 
+    /// returns whether the operation succeeded
     pub fn create_user(&self, username: &str, password: &str) -> Result<bool> {
         if username.trim().len() == 0 && password.trim().len() == 0 {
             return Ok(false)
@@ -50,6 +59,7 @@ impl Database {
         }
     }
 
+    /// Gets a user from the [`Database`]
     pub fn get_user(&self, username: &str, password: &str) -> Result<User> {
         let mut user = User::default();
 
@@ -57,6 +67,7 @@ impl Database {
             "SELECT id, username, password FROM users
             WHERE username = :username AND password = :password
         ;")?;
+
         let user_iter = stmt.query_map(
             &[(":username", username), (":password", password)],
             |row| {
@@ -79,11 +90,13 @@ impl Database {
         Ok(user)
     }
 
+    /// Gets all users from the [`Database`]
     pub fn get_all_users(&self) -> Result<Vec<User>> {
         let mut users = vec![];
         let mut stmt = self.conn.prepare(
             "SELECT id, username, password FROM users"
         )?;
+
         let user_iter = stmt.query_map([], |row| {
             let username: String = row.get(1)?;
             let password: String = row.get(2)?;
@@ -111,7 +124,7 @@ mod tests {
 
     fn setup() -> Result<Database> {
         let db = Database::open_in_memory()?;
-        db.create_users_table()?;
+        db.create_tables()?;
         Ok(db)
     }
 
