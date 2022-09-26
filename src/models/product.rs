@@ -6,7 +6,7 @@ pub struct Product {
 }
 
 impl Product {
-    fn new(id: i32, name: &str, price: i32) -> Self {
+    pub fn new(id: i32, name: &str, price: i32) -> Self {
         Self {
             id,
             name: name.to_string(),

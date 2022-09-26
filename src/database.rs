@@ -1,5 +1,5 @@
 use rusqlite::{Connection, Result};
-use crate::models::User;
+use crate::{User, models::Product};
 
 /// [`Database`] is a collection of methods 
 /// made to work with an SQlite [`Connection`]
@@ -38,6 +38,13 @@ impl Database {
                 password TEXT NOT NULL
             );", []
         )?;
+
+        self.conn.execute(
+            "CREATE TABLE IF NOT EXISTS products(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                price INTEGER NOT NULL
+            ;)", [])?;
 
         Ok(())
     }
@@ -114,6 +121,71 @@ impl Database {
         }
 
         Ok(users)
+    }
+
+    pub fn create_product(&self, name: &str, price: i32) -> Result<bool> {
+        if name.trim().len() == 0 || price < 0 {
+            return Ok(false);
+        }
+
+        let result = self.conn.execute(
+            "INSERT INTO products (name, price) VALUES (?, ?);",
+            (name, price));
+
+        match result {
+            Ok(_) => Ok(true),
+            Err(err) => Err(err)
+        }
+    }
+
+    pub fn get_product(&self, name: &str) -> Result<Product> {
+        let mut product = Product::default();
+
+        let mut stmt = self.conn.prepare(
+            "SELECT id, name, price FROM products WHERE name = :name;"
+        )?;
+
+        let product_iter = stmt.query_map(&[name], |row| {
+            let name: String = row.get(1)?;
+            Ok(
+                Product::new(
+                    row.get(0)?,
+                    &name,
+                    row.get(2)?
+                )
+            )
+        })?;
+
+        for prdt in product_iter {
+            product = prdt?;
+        }
+
+        Ok(product)
+    }
+
+    pub fn get_all_products(&self) -> Result<Vec<Product>> {
+        let mut products = vec![];
+
+        let mut stmt = self.conn.prepare(
+            "SELECT id, name, price FROM products;"
+        )?;
+
+        let product_iter = stmt.query_map([], |row| {
+            let name: String = row.get(1)?;
+            Ok(
+                Product::new(
+                    row.get(0)?,
+                    &name,
+                    row.get(2)?
+                )
+            )
+        })?;
+
+        for prdt in product_iter {
+            products.push(prdt?);
+        }
+
+        Ok(products)
     }
 }
 

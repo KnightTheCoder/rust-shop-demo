@@ -5,8 +5,15 @@ mod user_interface;
 
 use database::Database;
 use models::User;
-use utilities::{input, clear_screen};
-use user_interface::{register, login};
+use utilities::{
+    input,
+    hash_password,
+    clear_screen
+};
+use user_interface::{
+    register,
+    login
+};
 use std::process;
 
 fn main() {
