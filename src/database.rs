@@ -36,15 +36,13 @@ impl Database {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT NOT NULL,
                 password TEXT NOT NULL
-            );", []
-        )?;
-
-        self.conn.execute(
-            "CREATE TABLE IF NOT EXISTS products(
+            );
+            CREATE TABLE IF NOT EXISTS products(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 price INTEGER NOT NULL
-            ;)", [])?;
+            );", []
+        )?;
 
         Ok(())
     }
@@ -145,7 +143,8 @@ impl Database {
             "SELECT id, name, price FROM products WHERE name = :name;"
         )?;
 
-        let product_iter = stmt.query_map(&[name], |row| {
+        let product_iter = stmt.query_map(
+            &[(":name", name)], |row| {
             let name: String = row.get(1)?;
             Ok(
                 Product::new(
