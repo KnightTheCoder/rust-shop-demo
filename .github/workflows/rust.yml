@@ -5,13 +5,15 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-
+  test:
+    name: Test ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    continue-on-error: false
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        rust: [stable, nightly, beta]
+        rust: [stable]
 
     steps:
     - uses: actions/checkout@v3
