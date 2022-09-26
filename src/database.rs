@@ -1,8 +1,5 @@
 use rusqlite::{Connection, Result};
-use crate::{
-    user::User,
-    utilities::hash_password
-};
+use crate::user::User;
 
 #[derive(Debug)]
 pub struct Database {
@@ -109,8 +106,6 @@ impl Database {
 
 #[cfg(test)]
 mod tests {
-    use crate::utilities::hash_password;
-
     use super::Database;
     use rusqlite::Result;
 

@@ -5,6 +5,9 @@ use crate::{
     database::Database
 };
 
+/// Represents a user
+/// contains information about the user
+/// and it's used to interact with a [`Database`]
 #[derive(Debug)]
 pub struct User {
     pub id: i32,
@@ -13,6 +16,7 @@ pub struct User {
 }
 
 impl User {
+    /// Creates a [`User`] with a hashed password
     pub fn new(id: i32, username: &str, password: &str) -> Self {
         Self {
             id,
@@ -21,19 +25,25 @@ impl User {
         }
     }
 
+    /// Gets the value of the user's hashed password
     pub fn password(&self) -> String {
         self.password.clone()
     }
 
+    /// Sets and hashes a new password for the user
     pub fn set_password(&mut self, new_password: &str) {
         self.password = hash_password(new_password);
     }
 
+    /// Registers a new [`User`] and 
+    /// returns whether the operation succeeded
     pub fn register(&self, db: &Database) -> Result<bool> {
         let success = db.create_user(&self.username, &self.password)?;
         Ok(success)
     }
 
+    /// Logs in a [`User`] and 
+    /// returns whether the operation succeeded
     pub fn login(&self, db: &Database, username: &str, password: &str) -> Result<bool> {
         let user = db.get_user(username, &hash_password(password))?;
         Ok(user.id != -1)
