@@ -1,5 +1,5 @@
 use rusqlite::{Connection, Result};
-use crate::user::User;
+use crate::{User, models::Product};
 
 /// [`Database`] is a collection of methods 
 /// made to work with an SQlite [`Connection`]
@@ -31,12 +31,19 @@ impl Database {
 
     /// Creates tables if they don't already exist
     pub fn create_tables(&self) -> Result<()> {
-        self.conn.execute(
-            "CREATE TABLE IF NOT EXISTS users(
+        self.conn.execute_batch(
+            "BEGIN;
+            CREATE TABLE IF NOT EXISTS users(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT NOT NULL,
                 password TEXT NOT NULL
-            );", []
+            );
+            CREATE TABLE IF NOT EXISTS products(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                price INTEGER NOT NULL
+            );
+            COMMIT;"
         )?;
 
         Ok(())
@@ -115,6 +122,72 @@ impl Database {
 
         Ok(users)
     }
+
+    pub fn create_product(&self, name: &str, price: i32) -> Result<bool> {
+        if name.trim().len() == 0 || price < 0 {
+            return Ok(false);
+        }
+
+        let result = self.conn.execute(
+            "INSERT INTO products (name, price) VALUES (?, ?);",
+            (name, price));
+
+        match result {
+            Ok(_) => Ok(true),
+            Err(err) => Err(err)
+        }
+    }
+
+    pub fn get_product(&self, name: &str) -> Result<Product> {
+        let mut product = Product::default();
+
+        let mut stmt = self.conn.prepare(
+            "SELECT id, name, price FROM products WHERE name = :name;"
+        )?;
+
+        let product_iter = stmt.query_map(
+            &[(":name", name)], |row| {
+            let name: String = row.get(1)?;
+            Ok(
+                Product::new(
+                    row.get(0)?,
+                    &name,
+                    row.get(2)?
+                )
+            )
+        })?;
+
+        for prdt in product_iter {
+            product = prdt?;
+        }
+
+        Ok(product)
+    }
+
+    pub fn get_all_products(&self) -> Result<Vec<Product>> {
+        let mut products = vec![];
+
+        let mut stmt = self.conn.prepare(
+            "SELECT id, name, price FROM products;"
+        )?;
+
+        let product_iter = stmt.query_map([], |row| {
+            let name: String = row.get(1)?;
+            Ok(
+                Product::new(
+                    row.get(0)?,
+                    &name,
+                    row.get(2)?
+                )
+            )
+        })?;
+
+        for prdt in product_iter {
+            products.push(prdt?);
+        }
+
+        Ok(products)
+    }
 }
 
 #[cfg(test)]
@@ -134,23 +207,23 @@ mod tests {
             Ok(_) => true,
             Err(_) => false
         };
-        assert_eq!(result, true)
+        assert!(result)
     }
 
     #[test]
     fn create_user_success() {
         let db = setup().unwrap();
-        let success = db.create_user("User", "123").expect("Error creating user");
+        let success = db.create_user("User", "123").unwrap();
         
-        assert_eq!(success, true)
+        assert!(success)
     }
 
     #[test]
     fn create_user_failure() {
         let db = setup().unwrap();
-        let success = db.create_user("", "").expect("Error creating user");
+        let success = db.create_user("", "").unwrap();
         
-        assert_eq!(success, false)
+        assert!(!success)
     }
 
     #[test]
@@ -186,5 +259,46 @@ mod tests {
         }
         let users = db.get_all_users().unwrap();
         assert_eq!(users.len(), 5)
+    }
+
+    #[test]
+    fn create_product_success() {
+        let db = setup().unwrap();
+        let name = "generic_product";
+        let price = 100;
+        let success = db.create_product(name, price).unwrap();
+        assert!(success)
+    }
+
+    #[test]
+    fn create_product_failure() {
+        let db = setup().unwrap();
+        let success = db.create_product("", 0).unwrap();
+        assert!(!success)
+    }
+
+    #[test]
+    fn get_created_product() {
+        let db = setup().unwrap();
+        db.create_product("product", 100).unwrap();
+        let product = db.get_product("product").unwrap();
+        assert_ne!(product.id, -1)
+    }
+
+    #[test]
+    fn get_created_product_with_empty_data() {
+        let db = setup().unwrap();
+        db.create_product("", 0).unwrap();
+        let product = db.get_product("").unwrap();
+        assert_eq!(product.id, -1)
+    }
+
+    #[test]
+    fn create_multiple_products() {
+        let db = setup().unwrap();
+        db.create_product("product1", 100).unwrap();
+        db.create_product("product2", 200).unwrap();
+        let products = db.get_all_products().unwrap();
+        assert_eq!(products.len(), 2)
     }
 }

@@ -1,8 +1,8 @@
 use rusqlite::Result;
 
 use crate::{
-    utilities::hash_password,
-    database::Database
+    hash_password,
+    Database
 };
 
 /// Represents a user
