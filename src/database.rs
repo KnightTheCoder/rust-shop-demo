@@ -1,5 +1,5 @@
 use rusqlite::{Connection, Result};
-use crate::user::User;
+use crate::models::User;
 
 /// [`Database`] is a collection of methods 
 /// made to work with an SQlite [`Connection`]

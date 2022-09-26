@@ -1,10 +1,10 @@
-mod user;
+mod models;
 mod database;
 mod utilities;
 mod user_interface;
 
 use database::Database;
-use user::User;
+use models::User;
 use utilities::{input, clear_screen};
 use user_interface::{register, login};
 use std::process;
