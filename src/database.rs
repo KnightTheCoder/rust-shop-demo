@@ -31,8 +31,9 @@ impl Database {
 
     /// Creates tables if they don't already exist
     pub fn create_tables(&self) -> Result<()> {
-        self.conn.execute(
-            "CREATE TABLE IF NOT EXISTS users(
+        self.conn.execute_batch(
+            "BEGIN;
+            CREATE TABLE IF NOT EXISTS users(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT NOT NULL,
                 password TEXT NOT NULL
@@ -41,7 +42,8 @@ impl Database {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 price INTEGER NOT NULL
-            );", []
+            );
+            COMMIT;"
         )?;
 
         Ok(())
@@ -205,23 +207,23 @@ mod tests {
             Ok(_) => true,
             Err(_) => false
         };
-        assert_eq!(result, true)
+        assert!(result)
     }
 
     #[test]
     fn create_user_success() {
         let db = setup().unwrap();
-        let success = db.create_user("User", "123").expect("Error creating user");
+        let success = db.create_user("User", "123").unwrap();
         
-        assert_eq!(success, true)
+        assert!(success)
     }
 
     #[test]
     fn create_user_failure() {
         let db = setup().unwrap();
-        let success = db.create_user("", "").expect("Error creating user");
+        let success = db.create_user("", "").unwrap();
         
-        assert_eq!(success, false)
+        assert!(!success)
     }
 
     #[test]
@@ -257,5 +259,46 @@ mod tests {
         }
         let users = db.get_all_users().unwrap();
         assert_eq!(users.len(), 5)
+    }
+
+    #[test]
+    fn create_product_success() {
+        let db = setup().unwrap();
+        let name = "generic_product";
+        let price = 100;
+        let success = db.create_product(name, price).unwrap();
+        assert!(success)
+    }
+
+    #[test]
+    fn create_product_failure() {
+        let db = setup().unwrap();
+        let success = db.create_product("", 0).unwrap();
+        assert!(!success)
+    }
+
+    #[test]
+    fn get_created_product() {
+        let db = setup().unwrap();
+        db.create_product("product", 100).unwrap();
+        let product = db.get_product("product").unwrap();
+        assert_ne!(product.id, -1)
+    }
+
+    #[test]
+    fn get_created_product_with_empty_data() {
+        let db = setup().unwrap();
+        db.create_product("", 0).unwrap();
+        let product = db.get_product("").unwrap();
+        assert_eq!(product.id, -1)
+    }
+
+    #[test]
+    fn create_multiple_products() {
+        let db = setup().unwrap();
+        db.create_product("product1", 100).unwrap();
+        db.create_product("product2", 200).unwrap();
+        let products = db.get_all_products().unwrap();
+        assert_eq!(products.len(), 2)
     }
 }
