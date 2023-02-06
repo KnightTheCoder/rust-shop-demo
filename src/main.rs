@@ -12,27 +12,33 @@ use utilities::{
 };
 use user_interface::{
     register,
-    login
+    login,
+    show_all_users,
+    create_product,
+    show_all_products
 };
 use std::process;
 
 fn main() {
-    let db = Database::new("users.db").expect("Error creating database");
-    db.create_tables().expect("Error creating users table");
     let mut user = User::default();
     
     loop {
+        let db = Database::new("users.db").expect("Error creating database");
+        db.create_tables().expect("Error creating users table");
+
         clear_screen();
 
         println!("Register (0)");
         println!("Login (1)");
-        println!("Show all users (2)");
-        println!("Exit (3)");
+        println!("Create product (2)");
+        println!("Show all users (3)");
+        println!("Show all products (4)");
+        println!("Exit (5)");
         
         let option = input(">")
-        .expect("Failed to get input")
-        .parse::<i32>()
-        .expect("Failed to parse");
+            .expect("Failed to get input")
+            .parse::<i32>()
+            .expect("Failed to parse");
         
         clear_screen();
 
@@ -49,16 +55,10 @@ fn main() {
             1 => {
                 login(&db, &user);
             }
-            2 => {
-                let users = db.get_all_users().expect("Failed to get users");
-                if users.len() == 0 {
-                    println!("No users available");
-                }
-                for user in users {
-                    println!("{:#?}", user);
-                }
-            }
-            3 => process::exit(0),
+            2 => create_product(&db),
+            3 => show_all_users(&db),
+            4 => show_all_products(&db),
+            5 => process::exit(0),
             _ => ()
         }
         input("Press any key to continue").expect("Failed to get input");
