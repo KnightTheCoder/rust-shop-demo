@@ -1,3 +1,5 @@
+/* Requires sqlite-devel to work */
+
 mod models;
 mod database;
 mod utilities;
